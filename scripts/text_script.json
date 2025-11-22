@@ -1,0 +1,67 @@
+{
+  "metadata": {
+    "name": "自动生成脚本",
+    "version": "1.0",
+    "description": "由文本脚本自动转换"
+  },
+  "steps": {
+    "welcome": {
+      "name": "welcome",
+      "actions": {
+        "speak": "${name}您好，请问有什么可以帮您?",
+        "listen": "5,20"
+      },
+      "branch": {
+        "投诉": "complainProc",
+        "账单": "billProc",
+        "无应答": "exitProc",
+        "沉默": "silenceProc"
+      }
+    },
+    "complainProc": {
+      "name": "complainProc",
+      "actions": {
+        "speak": "您的意见是我们改进工作的动力，请问您还有什么补充?",
+        "listen": "5,50"
+      },
+      "branch": {
+        "无应答": "exitProc",
+        "沉默": "silenceProc"
+      }
+    },
+    "billProc": {
+      "name": "billProc",
+      "actions": {
+        "speak": "您的本月账单是${amount}元，感谢您的来电，再见",
+        "listen": "1,1"
+      },
+      "branch": {
+        "无应答": "exitProc",
+        "沉默": "silenceProc"
+      }
+    },
+    "silenceProc": {
+      "name": "silenceProc",
+      "actions": {
+        "speak": "听不清，请您大声一点可以吗",
+        "listen": "5,20"
+      },
+      "branch": {
+        "投诉": "complainProc",
+        "账单": "billProc",
+        "无应答": "exitProc",
+        "沉默": "silenceProc"
+      }
+    },
+    "exitProc": {
+      "name": "exitProc",
+      "actions": {
+        "speak": "感谢您的来电，再见"
+      },
+      "branch": {
+        "无应答": "exitProc",
+        "沉默": "silenceProc"
+      }
+    }
+  }
+}

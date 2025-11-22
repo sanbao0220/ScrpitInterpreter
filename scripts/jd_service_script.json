@@ -1,0 +1,210 @@
+{
+  "metadata": {
+    "name": "自动生成脚本",
+    "version": "1.0",
+    "description": "由文本脚本自动转换"
+  },
+  "steps": {
+    "welcome": {
+      "name": "welcome",
+      "actions": {
+        "speak": "${name}您好，欢迎致电京东客服，请问有什么可以帮您？",
+        "listen": "5,20"
+      },
+      "branch": {
+        "订单": "orderProc",
+        "退换货": "returnProc",
+        "投诉": "complainProc",
+        "人工": "humanProc",
+        "意图识别失败": "fail"
+      },
+      "if": [
+        {
+          "condition": "$is_vip == true",
+          "goto": "vipProc"
+        }
+      ]
+    },
+    "vipProc": {
+      "name": "vipProc",
+      "actions": {
+        "speak": "尊贵的京东PLUS会员，欢迎您的来电！请问有什么可以帮您？",
+        "listen": "5,20"
+      },
+      "branch": {
+        "订单": "orderProc",
+        "退换货": "returnProc",
+        "投诉": "complainProc",
+        "人工": "humanProc",
+        "意图识别失败": "fail",
+        "结束": "exit"
+      }
+    },
+    "orderProc": {
+      "name": "orderProc",
+      "actions": {
+        "speak": "您的订单号为${order_id}，订单状态：${status}，金额：${price}元。",
+        "listen": "5,30"
+      },
+      "branch": {
+        "意图识别失败": "fail",
+        "人工": "humanProc",
+        "结束": "exit"
+      },
+      "if": [
+        {
+          "condition": "$order_id == null",
+          "goto": "orderNotFound"
+        }
+      ]
+    },
+    "orderNotFound": {
+      "name": "orderNotFound",
+      "actions": {
+        "speak": "未查询到您的订单信息，请确认订单号是否正确。",
+        "listen": "5,20"
+      },
+      "branch": {
+        "订单": "orderProc",
+        "人工": "humanProc",
+        "意图识别失败": "fail",
+        "结束": "exit"
+      }
+    },
+    "returnProc": {
+      "name": "returnProc",
+      "actions": {
+        "speak": "请问您需要退货还是换货？",
+        "listen": "5,30"
+      },
+      "branch": {
+        "退货": "refundProc",
+        "换货": "exchangeProc",
+        "意图识别失败": "fail",
+        "人工": "humanProc",
+        "结束": "exit"
+      },
+      "if": [
+        {
+          "condition": "$status == '已退货'",
+          "goto": "alreadyRefund"
+        },
+        {
+          "condition": "$status == '已换货'",
+          "goto": "alreadyExchanged"
+        }
+      ]
+    },
+    "alreadyRefund": {
+      "name": "alreadyRefund",
+      "actions": {
+        "speak": "您的订单已经完成退货，无需重复操作。",
+        "listen": "5,20"
+      },
+      "branch": {
+        "订单": "orderProc",
+        "人工": "humanProc",
+        "意图识别失败": "fail",
+        "结束": "exit"
+      }
+    },
+    "alreadyExchanged": {
+      "name": "alreadyExchanged",
+      "actions": {
+        "speak": "您的订单已经完成换货，无需重复操作。",
+        "listen": "5,20"
+      },
+      "branch": {
+        "订单": "orderProc",
+        "人工": "humanProc",
+        "意图识别失败": "fail",
+        "结束": "exit"
+      }
+    },
+    "refundProc": {
+      "name": "refundProc",
+      "actions": {
+        "speak": "您的退货申请已受理，我们会尽快为您处理。",
+        "upgrate": [
+          {
+            "field": "status",
+            "value": "已退货"
+          }
+        ],
+        "listen": "1,1"
+      },
+      "branch": {
+        "意图识别失败": "fail",
+        "结束": "exit"
+      }
+    },
+    "exchangeProc": {
+      "name": "exchangeProc",
+      "actions": {
+        "speak": "您的换货申请已受理，我们会尽快为您安排。",
+        "upgrate": [
+          {
+            "field": "status",
+            "value": "已换货"
+          }
+        ],
+        "listen": "1,1"
+      },
+      "branch": {
+        "意图识别失败": "fail",
+        "结束": "exit"
+      }
+    },
+    "complainProc": {
+      "name": "complainProc",
+      "actions": {
+        "speak": "很抱歉给您带来不便，请描述您的投诉内容，我们会尽快处理。",
+        "listen": "5,50",
+        "upgrate": [
+          {
+            "field": "status",
+            "value": "投诉处理中"
+          }
+        ]
+      },
+      "branch": {
+        "意图识别失败": "fail",
+        "人工": "humanProc",
+        "结束": "exit"
+      }
+    },
+    "humanProc": {
+      "name": "humanProc",
+      "actions": {
+        "speak": "正在为您转接人工客服，请稍候。",
+        "listen": "1,1"
+      },
+      "branch": {
+        "意图识别失败": "fail",
+        "结束": "exit"
+      }
+    },
+    "fail": {
+      "name": "fail",
+      "actions": {
+        "speak": "没有听清您的需求，请您再说一遍好吗？",
+        "listen": "5,20"
+      },
+      "branch": {
+        "订单": "orderProc",
+        "退换货": "returnProc",
+        "投诉": "complainProc",
+        "人工": "humanProc",
+        "意图识别失败": "fail",
+        "结束": "exit"
+      }
+    },
+    "exit": {
+      "name": "exit",
+      "actions": {
+        "speak": "感谢您的来电，祝您生活愉快，再见！"
+      },
+      "branch": {}
+    }
+  }
+}

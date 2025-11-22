@@ -1,0 +1,64 @@
+// =======================
+// 文本脚本语言规范说明
+// =======================
+// 1. 必须包含 welcome、exit、fail 三个基础Step。
+// 2. 其它Step为具体业务功能，如账单查询、投诉等。
+// 3. 必须为数据错误（如查无订单、重复退货等）设计专门的Step，并在业务流程中通过If条件或分支跳转到这些错误处理Step，给予用户明确反馈和后续指引。
+//    例如：If $order_id == null Then orderNotFound
+// 4. actions 支持：
+//    - Speak <内容>         // 机器人说话，支持变量如 $name。遇到$变量时，需在构造分析树节点时自动用数据库中对应字段的数据进行替换。
+//    - Listen <min>, <max>  // 监听用户输入，参数为最短和最长等待时间（秒）
+//    - UPGRATE <变量名> <值> // 修改数据库中对应字段的值，如 UPGRATE $status "已处理"
+// 5. branch 统一用 Branch "<关键词>", <stepName> 表示：
+//    - 业务关键词分支：如 Branch "投诉", complainProc
+//    - Branch "意图识别失败", fail 表示无输入或无法识别
+// 6. 支持条件分支：
+//    - If <条件> Then <stepName>，如 If $amount > 1000 Then vipProc
+//    - 条件表达式支持变量、数值、字符串的比较（==, !=, >, <, >=, <=）
+//    - 条件分支优先于普通Branch分支，满足条件即跳转
+// 7. 变量用 $name 形式表示，所有$变量均应与数据库字段一一对应，遇到$变量时自动从数据库获取数据进行替换
+// =======================
+
+// =======================
+// 示例脚本
+// =======================
+
+Step welcome
+    Speak $name + "您好，请问有什么可以帮您？"
+    Listen 5, 20
+    If $amount > 1000 Then vipProc
+    Branch "投诉", complainProc
+    Branch "账单", billProc
+    Branch "意图识别失败", fail
+
+Step vipProc
+    Speak "尊贵的VIP客户，欢迎您的来电！请问有什么可以帮您？"
+    Listen 5, 20
+    Branch "投诉", complainProc
+    Branch "账单", billProc
+    Branch "意图识别失败", fail
+    Branch "结束", exit
+
+Step complainProc
+    Speak "您的意见是我们改进工作的动力，您已投诉" + $complaint_count + "次，请问您还有什么补充？"
+    Listen 5, 30
+    UPGRATE $complaint_status "已记录"
+    Branch "意图识别失败", fail
+    Branch "结束", exit
+
+Step billProc
+    Speak "您的本月账单是" + $amount + "元，感谢您的来电。"
+    Listen 1, 1
+    Branch "意图识别失败", fail
+    Branch "结束", exit
+
+Step fail
+    Speak "没有听清您的需求，请您再说一遍好吗？"
+    Listen 5, 20
+    Branch "投诉", complainProc
+    Branch "账单", billProc
+    Branch "意图识别失败", fail
+    Branch "结束", exit
+
+Step exit
+    Speak "感谢您的来电，再见"

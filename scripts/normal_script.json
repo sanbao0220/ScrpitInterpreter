@@ -1,0 +1,33 @@
+{
+  "metadata": {
+    "name": "客服对话脚本（完整版）",
+    "version": "2.0",
+    "description": "包含退出机制和意图识别失败处理"
+  },
+  "steps": {
+    "welcome": {
+      "name": "welcome",
+      "actions": {
+        "speak": "欢迎使用客服系统，请问我有什么能够帮助您的？您可以说投诉、账单查询、转人工服务，或者直接说退出。"
+        ,"listen": "5,20"
+      },
+      "branch": {
+        "投诉": "complainProc",
+        "账单": "billProc",
+        "退出": "thanks",
+        "转人工": "humanService",
+        "沉默": "silenceProc"
+      }
+    },
+     "complainProc":
+     {
+       "name": "",
+       "actions": [],
+       "branch": {
+
+       }
+     }
+  }
+
+}
+
