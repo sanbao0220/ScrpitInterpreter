@@ -3,31 +3,22 @@
 // =======================
 
 Step welcome
-    If $is_vip == true Then vipProc
     Speak $name + "您好，欢迎致电京东客服，请问有什么可以帮您？您可以进行咨询商品售后服务，可以查询订单信息，可以咨询人工客服或者进行投诉"
     Listen 5, 20
     Branch "订单", orderProc
-    Branch "退换货", returnProc
-    Branch "投诉", complainProc
-    Branch "人工", humanProc
-    Branch "意图识别失败", fail
-    Branch "结束", exit
-
-Step vipProc
-    Speak "尊贵的京东PLUS会员，欢迎您的来电！请问有什么可以帮您？"
-    Listen 5, 20
-    Branch "订单", orderProc
-    Branch "退换货", returnProc
+    Branch "退货", returnProc
+    Branch "换货", exchangeProc
     Branch "投诉", complainProc
     Branch "人工", humanProc
     Branch "意图识别失败", fail
     Branch "结束", exit
 
 Step middleProc
-    Speak "您还需要我提供什么服务？您可以说订单、退换货、投诉、人工或退出。"
+    Speak "您还需要我提供什么服务？您可以说订单、退货、换货、投诉、人工或退出。"
     Listen 5, 20
     Branch "订单", orderProc
-    Branch "退换货", returnProc
+    Branch "退货", returnProc
+    Branch "换货", exchangeProc
     Branch "投诉", complainProc
     Branch "人工", humanProc
     Branch "意图识别失败", fail
@@ -46,13 +37,15 @@ Step orderNotFound
 
 Step returnProc
     If $status == '已退货' Then alreadyRefund
-    If $status == '已换货' Then alreadyExchanged
-    Speak "请问您需要退货还是换货？"
-    Listen 5, 30
-    Branch "退货", refundProc
-    Branch "换货", exchangeProc
-    Branch "意图识别失败", fail
+    Speak "您的退货申请已受理，我们会尽快为您处理。如需其他帮助请继续说明。"
+    UPGRATE $status "已退货"
+    Middle
 
+Step exchangeProc
+    If $status == '已换货' Then alreadyExchanged
+    Speak "您的换货申请已受理，我们会尽快为您安排。"
+    UPGRATE $status "已换货"
+    Middle
 
 Step alreadyRefund
     Speak "您的订单已经完成退货，无需重复操作。"
@@ -62,32 +55,22 @@ Step alreadyExchanged
     Speak "您的订单已经完成换货，无需重复操作。如需其他帮助请说明。"
     Middle
 
-Step refundProc
-    Speak "您的退货申请已受理，我们会尽快为您处理。如需其他帮助请继续说明。"
-    UPGRATE $status "已退货"
-    Middle
-
-Step exchangeProc
-    Speak "您的换货申请已受理，我们会尽快为您安排。"
-    UPGRATE $status "已换货"
-    Middle
-
 Step complainProc
     Speak "很抱歉给您带来不便，请描述您的投诉内容，我们会尽快处理。如需退货或换货也可直接说明。"
     Listen 5, 50
     UPGRATE $compain $listen_content
     Middle
 
-
 Step humanProc
     Speak "正在为您转接人工客服..."
     Middle
 
 Step fail
-    Speak "没有听清您的需求，请您再说一遍好吗？您可以说订单、退换货、投诉、人工或退出。"
+    Speak "没有听清您的需求，请您再说一遍好吗？您可以说订单、退货、换货、投诉、人工或退出。"
     Listen 5, 20
     Branch "订单", orderProc
-    Branch "退换货", returnProc
+    Branch "退货", returnProc
+    Branch "换货", exchangeProc
     Branch "投诉", complainProc
     Branch "人工", humanProc
     Branch "意图识别失败", fail
