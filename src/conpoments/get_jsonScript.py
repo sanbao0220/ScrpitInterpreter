@@ -85,30 +85,38 @@ def parse_text_script(text_script: str, metadata=None):
         if m:
             actions["listen"] = f"{m.group(1)},{m.group(2)}"
             continue
-        m = re.match(r"UPGRATE\s+\$([a-zA-Z_][\w]*)\s+\"([^\"]*)\"", line)
+        m = re.match(r"UPGRATE\s+\$([a-zA-Z_][\w]*)\s+\"?([^\"]*)\"?", line)
         if m:
             # 数据更新动作，支持多个
             if "upgrate" not in actions:
                 actions["upgrate"] = []
             actions["upgrate"].append({"field": m.group(1), "value": m.group(2)})
             continue
-        # 修正If条件分支，条件中的双引号替换为单引号，避免转义
         m = re.match(r"If\s+(.+?)\s+Then\s+(\w+)", line)
         if m:
             cond = m.group(1).strip().replace('"', "'")
             ifs.append({"condition": cond, "goto": m.group(2)})
             continue
-        m = re.match(r"Branch\s+\"(.+?)\"\s*,\s*(\w+)", line)
+        # 支持 Branch "结束", exit 或 Branch 结束, exit
+        m = re.match(r'Branch\s+"(.+?)"\s*,\s*(\w+)', line)
         if m:
-            branch[m.group(1)] = m.group(2)
+            branch_key = m.group(1)
+            branch_val = m.group(2)
+            branch[branch_key] = branch_val
             continue
-        m = re.match(r"Branch\s+(.+?),\s*(\w+)", line)
+        m = re.match(r'Branch\s+(.+?),\s*(\w+)', line)
         if m:
-            branch[m.group(1)] = m.group(2)
+            branch_key = m.group(1)
+            branch_val = m.group(2)
+            branch[branch_key] = branch_val
             continue
-        m = re.match(r"Exit", line)
-        if m:
+        # 将Exit作为动作
+        if re.match(r"Exit", line):
             actions["exit"] = True
+            continue
+        # 将Middle作为动作
+        if re.match(r"Middle", line):
+            actions["middle"] = True
             continue
 
     flush_step()

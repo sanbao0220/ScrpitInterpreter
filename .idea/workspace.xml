@@ -4,7 +4,20 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="1abab89e-bbca-4160-a749-2a59b2d44a74" name="更改" comment="" />
+    <list default="true" id="1abab89e-bbca-4160-a749-2a59b2d44a74" name="更改" comment="">
+      <change afterPath="$PROJECT_DIR$/.idea/vcs.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/copilotDiffState.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/copilotDiffState.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/scripts/jd_service_script.json" beforeDir="false" afterPath="$PROJECT_DIR$/scripts/jd_service_script.json" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/scripts/jd_service_script.txt" beforeDir="false" afterPath="$PROJECT_DIR$/scripts/jd_service_script.txt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/scripts/text_script.txt" beforeDir="false" afterPath="$PROJECT_DIR$/scripts/text_script.txt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/conpoments/ASTBuilder.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/conpoments/Ast.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/conpoments/data_api.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/conpoments/data_api.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/conpoments/get_jsonScript.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/conpoments/get_jsonScript.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/intelligent_customer_service/ScriptInterpreter.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/intelligent_customer_service/__init__.py" beforeDir="false" />
+    </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
@@ -28,6 +41,9 @@
       </map>
     </option>
   </component>
+  <component name="Git.Settings">
+    <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
+  </component>
   <component name="ProjectColorInfo">{
   &quot;associatedIndex&quot;: 1
 }</component>
@@ -36,20 +52,25 @@
     <option name="hideEmptyMiddlePackages" value="true" />
     <option name="showLibraryContents" value="true" />
   </component>
-  <component name="PropertiesComponent">{
-  &quot;keyToString&quot;: {
-    &quot;Python.AG1.executor&quot;: &quot;Run&quot;,
-    &quot;RunOnceActivity.ShowReadmeOnStart&quot;: &quot;true&quot;,
-    &quot;last_opened_file_path&quot;: &quot;C:/Users/20232/OneDrive/大三上/程序设计与实践/大作业/项目文件/CSBotInterpreter&quot;,
-    &quot;node.js.detected.package.eslint&quot;: &quot;true&quot;,
-    &quot;node.js.detected.package.tslint&quot;: &quot;true&quot;,
-    &quot;node.js.selected.package.eslint&quot;: &quot;(autodetect)&quot;,
-    &quot;node.js.selected.package.tslint&quot;: &quot;(autodetect)&quot;,
-    &quot;nodejs_package_manager_path&quot;: &quot;npm&quot;,
-    &quot;settings.editor.selected.configurable&quot;: &quot;preferences.pluginManager&quot;,
-    &quot;vue.rearranger.settings.migration&quot;: &quot;true&quot;
+  <component name="PropertiesComponent"><![CDATA[{
+  "keyToString": {
+    "Python.AG1.executor": "Run",
+    "Python.Ast1.executor": "Run",
+    "Python.ScriptInterpreter.executor": "Run",
+    "RunOnceActivity.ShowReadmeOnStart": "true",
+    "RunOnceActivity.git.unshallow": "true",
+    "SHARE_PROJECT_CONFIGURATION_FILES": "true",
+    "git-widget-placeholder": "main",
+    "last_opened_file_path": "C:/Users/20232/OneDrive/大三上/程序设计与实践/大作业/项目文件/CSBotInterpreter",
+    "node.js.detected.package.eslint": "true",
+    "node.js.detected.package.tslint": "true",
+    "node.js.selected.package.eslint": "(autodetect)",
+    "node.js.selected.package.tslint": "(autodetect)",
+    "nodejs_package_manager_path": "npm",
+    "settings.editor.selected.configurable": "preferences.pluginManager",
+    "vue.rearranger.settings.migration": "true"
   }
-}</component>
+}]]></component>
   <component name="RecentsManager">
     <key name="MoveFile.RECENT_KEYS">
       <recent name="C:\Users\20232\OneDrive\大三上\程序设计与实践\大作业\项目文件\CSBotInterpreter\src\conpoments" />
@@ -58,6 +79,60 @@
       <recent name="C:\Users\20232\OneDrive\大三上\程序设计与实践\大作业\项目文件\CSBotInterpreter\src\intelligent_customer_service" />
       <recent name="C:\Users\20232\OneDrive\大三上\程序设计与实践\大作业\项目文件\CSBotInterpreter\src" />
     </key>
+  </component>
+  <component name="RunManager" selected="Python.ScriptInterpreter">
+    <configuration name="Ast1" type="PythonConfigurationType" factoryName="Python" temporary="true" nameIsGenerated="true">
+      <module name="CSBotInterpreter" />
+      <option name="ENV_FILES" value="" />
+      <option name="INTERPRETER_OPTIONS" value="" />
+      <option name="PARENT_ENVS" value="true" />
+      <envs>
+        <env name="PYTHONUNBUFFERED" value="1" />
+      </envs>
+      <option name="SDK_HOME" value="" />
+      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$/src/conpoments" />
+      <option name="IS_MODULE_SDK" value="true" />
+      <option name="ADD_CONTENT_ROOTS" value="true" />
+      <option name="ADD_SOURCE_ROOTS" value="true" />
+      <EXTENSION ID="PythonCoverageRunConfigurationExtension" runner="coverage.py" />
+      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/src/conpoments/Ast1.py" />
+      <option name="PARAMETERS" value="" />
+      <option name="SHOW_COMMAND_LINE" value="false" />
+      <option name="EMULATE_TERMINAL" value="false" />
+      <option name="MODULE_MODE" value="false" />
+      <option name="REDIRECT_INPUT" value="false" />
+      <option name="INPUT_FILE" value="" />
+      <method v="2" />
+    </configuration>
+    <configuration name="ScriptInterpreter" type="PythonConfigurationType" factoryName="Python" temporary="true" nameIsGenerated="true">
+      <module name="CSBotInterpreter" />
+      <option name="ENV_FILES" value="" />
+      <option name="INTERPRETER_OPTIONS" value="" />
+      <option name="PARENT_ENVS" value="true" />
+      <envs>
+        <env name="PYTHONUNBUFFERED" value="1" />
+      </envs>
+      <option name="SDK_HOME" value="" />
+      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$/src/conpoments" />
+      <option name="IS_MODULE_SDK" value="true" />
+      <option name="ADD_CONTENT_ROOTS" value="true" />
+      <option name="ADD_SOURCE_ROOTS" value="true" />
+      <EXTENSION ID="PythonCoverageRunConfigurationExtension" runner="coverage.py" />
+      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/src/conpoments/ScriptInterpreter.py" />
+      <option name="PARAMETERS" value="" />
+      <option name="SHOW_COMMAND_LINE" value="false" />
+      <option name="EMULATE_TERMINAL" value="false" />
+      <option name="MODULE_MODE" value="false" />
+      <option name="REDIRECT_INPUT" value="false" />
+      <option name="INPUT_FILE" value="" />
+      <method v="2" />
+    </configuration>
+    <recent_temporary>
+      <list>
+        <item itemvalue="Python.ScriptInterpreter" />
+        <item itemvalue="Python.Ast1" />
+      </list>
+    </recent_temporary>
   </component>
   <component name="SharedIndexes">
     <attachedChunks>
@@ -94,6 +169,8 @@
       <workItem from="1763086703278" duration="19000" />
       <workItem from="1763442172840" duration="1557000" />
       <workItem from="1763694436362" duration="195000" />
+      <workItem from="1763864827559" duration="1253000" />
+      <workItem from="1763873869202" duration="1554000" />
     </task>
     <servers />
   </component>
@@ -102,5 +179,7 @@
   </component>
   <component name="com.intellij.coverage.CoverageDataManagerImpl">
     <SUITE FILE_PATH="coverage/CSBotInterpreter$AG1.coverage" NAME="AG1 覆盖结果" MODIFIED="1761461069548" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/src/actions" />
+    <SUITE FILE_PATH="coverage/CSBotInterpreter$ScriptInterpreter.coverage" NAME="ScriptInterpreter 覆盖结果" MODIFIED="1763875382795" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/src/conpoments" />
+    <SUITE FILE_PATH="coverage/CSBotInterpreter$Ast1.coverage" NAME="Ast1 覆盖结果" MODIFIED="1763875296899" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/src/conpoments" />
   </component>
 </project>

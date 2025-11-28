@@ -26,23 +26,15 @@
 Step welcome
     Speak $name + "您好，请问有什么可以帮您？"
     Listen 5, 20
-    If $amount > 1000 Then vipProc
     Branch "投诉", complainProc
     Branch "账单", billProc
     Branch "意图识别失败", fail
-
-Step vipProc
-    Speak "尊贵的VIP客户，欢迎您的来电！请问有什么可以帮您？"
-    Listen 5, 20
-    Branch "投诉", complainProc
-    Branch "账单", billProc
-    Branch "意图识别失败", fail
-    Branch "结束", exit
 
 Step complainProc
-    Speak "您的意见是我们改进工作的动力，您已投诉" + $complaint_count + "次，请问您还有什么补充？"
+    Speak "您的意见是我们改进工作的动力" 
     Listen 5, 30
-    UPGRATE $complaint_status "已记录"
+    Speak "感谢您的反馈，我们会尽快改善！"
+    UPGRATE $complaint_content $listen_content
     Branch "意图识别失败", fail
     Branch "结束", exit
 

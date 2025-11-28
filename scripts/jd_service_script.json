@@ -8,7 +8,7 @@
     "welcome": {
       "name": "welcome",
       "actions": {
-        "speak": "${name}您好，欢迎致电京东客服，请问有什么可以帮您？",
+        "speak": "${name}您好，欢迎致电京东客服，请问有什么可以帮您？您可以进行咨询商品售后服务，可以查询订单信息，可以咨询人工客服或者进行投诉",
         "listen": "5,20"
       },
       "branch": {
@@ -16,7 +16,8 @@
         "退换货": "returnProc",
         "投诉": "complainProc",
         "人工": "humanProc",
-        "意图识别失败": "fail"
+        "意图识别失败": "fail",
+        "结束": "exit"
       },
       "if": [
         {
@@ -40,21 +41,40 @@
         "结束": "exit"
       }
     },
+    "middleProc": {
+      "name": "middleProc",
+      "actions": {
+        "speak": "您还需要我提供什么服务？您可以说订单、退换货、投诉、人工或退出。",
+        "listen": "5,20"
+      },
+      "branch": {
+        "订单": "orderProc",
+        "退换货": "returnProc",
+        "投诉": "complainProc",
+        "人工": "humanProc",
+        "意图识别失败": "fail",
+        "结束": "exit"
+      }
+    },
     "orderProc": {
       "name": "orderProc",
       "actions": {
-        "speak": "您的订单号为${order_id}，订单状态：${status}，金额：${price}元。",
-        "listen": "5,30"
+        "speak": "您的订单号为${order_id}，订单状态：${status}，金额：${price}元。如需退货、换货或投诉，请直接说明。",
+        "middle": true
       },
-      "branch": {
-        "意图识别失败": "fail",
-        "人工": "humanProc",
-        "结束": "exit"
-      },
+      "branch": {},
       "if": [
         {
           "condition": "$order_id == null",
           "goto": "orderNotFound"
+        },
+        {
+          "condition": "$status == '已退货'",
+          "goto": "alreadyRefund"
+        },
+        {
+          "condition": "$status == '已换货'",
+          "goto": "alreadyExchanged"
         }
       ]
     },
@@ -62,14 +82,9 @@
       "name": "orderNotFound",
       "actions": {
         "speak": "未查询到您的订单信息，请确认订单号是否正确。",
-        "listen": "5,20"
+        "middle": true
       },
-      "branch": {
-        "订单": "orderProc",
-        "人工": "humanProc",
-        "意图识别失败": "fail",
-        "结束": "exit"
-      }
+      "branch": {}
     },
     "returnProc": {
       "name": "returnProc",
@@ -80,9 +95,7 @@
       "branch": {
         "退货": "refundProc",
         "换货": "exchangeProc",
-        "意图识别失败": "fail",
-        "人工": "humanProc",
-        "结束": "exit"
+        "意图识别失败": "fail"
       },
       "if": [
         {
@@ -99,44 +112,31 @@
       "name": "alreadyRefund",
       "actions": {
         "speak": "您的订单已经完成退货，无需重复操作。",
-        "listen": "5,20"
+        "middle": true
       },
-      "branch": {
-        "订单": "orderProc",
-        "人工": "humanProc",
-        "意图识别失败": "fail",
-        "结束": "exit"
-      }
+      "branch": {}
     },
     "alreadyExchanged": {
       "name": "alreadyExchanged",
       "actions": {
-        "speak": "您的订单已经完成换货，无需重复操作。",
-        "listen": "5,20"
+        "speak": "您的订单已经完成换货，无需重复操作。如需其他帮助请说明。",
+        "middle": true
       },
-      "branch": {
-        "订单": "orderProc",
-        "人工": "humanProc",
-        "意图识别失败": "fail",
-        "结束": "exit"
-      }
+      "branch": {}
     },
     "refundProc": {
       "name": "refundProc",
       "actions": {
-        "speak": "您的退货申请已受理，我们会尽快为您处理。",
+        "speak": "您的退货申请已受理，我们会尽快为您处理。如需其他帮助请继续说明。",
         "upgrate": [
           {
             "field": "status",
             "value": "已退货"
           }
         ],
-        "listen": "1,1"
+        "middle": true
       },
-      "branch": {
-        "意图识别失败": "fail",
-        "结束": "exit"
-      }
+      "branch": {}
     },
     "exchangeProc": {
       "name": "exchangeProc",
@@ -148,46 +148,37 @@
             "value": "已换货"
           }
         ],
-        "listen": "1,1"
+        "middle": true
       },
-      "branch": {
-        "意图识别失败": "fail",
-        "结束": "exit"
-      }
+      "branch": {}
     },
     "complainProc": {
       "name": "complainProc",
       "actions": {
-        "speak": "很抱歉给您带来不便，请描述您的投诉内容，我们会尽快处理。",
+        "speak": "很抱歉给您带来不便，请描述您的投诉内容，我们会尽快处理。如需退货或换货也可直接说明。",
         "listen": "5,50",
         "upgrate": [
           {
-            "field": "status",
-            "value": "投诉处理中"
+            "field": "compain",
+            "value": "$listen_content"
           }
-        ]
+        ],
+        "middle": true
       },
-      "branch": {
-        "意图识别失败": "fail",
-        "人工": "humanProc",
-        "结束": "exit"
-      }
+      "branch": {}
     },
     "humanProc": {
       "name": "humanProc",
       "actions": {
-        "speak": "正在为您转接人工客服，请稍候。",
-        "listen": "1,1"
+        "speak": "正在为您转接人工客服...",
+        "middle": true
       },
-      "branch": {
-        "意图识别失败": "fail",
-        "结束": "exit"
-      }
+      "branch": {}
     },
     "fail": {
       "name": "fail",
       "actions": {
-        "speak": "没有听清您的需求，请您再说一遍好吗？",
+        "speak": "没有听清您的需求，请您再说一遍好吗？您可以说订单、退换货、投诉、人工或退出。",
         "listen": "5,20"
       },
       "branch": {

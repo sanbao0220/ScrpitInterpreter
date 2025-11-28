@@ -1,153 +1,137 @@
 """
-数据API模块
+DataAPI 数据交互组件接口说明
 
-功能：
-- 提供用户数据和投诉数据的存储、查询、修改接口，支持多数据库文件。
-- 支持初始化数据库表结构。
+主要功能：
+- 针对每个脚本（如京东客服）维护独立的数据目录，实现用户数据的持久化、导入、导出和管理。
+- 支持与语法分析树（ASTree1）对象的数据缓冲区（data_buffer, input_buffer）进行数据同步。
 
-主要接口：
-- init_db(db_path='csbot.db'): 初始化数据库（创建表结构），可指定数据库文件名。
-- get_user_info(user_id, db_path='csbot.db'): 查询指定用户信息，返回字典。
-- update_user_info(user_id, field, value, db_path='csbot.db'): 更新指定用户的某个字段，返回是否成功。
-- add_complaint(user_id, content, db_path='csbot.db'): 添加投诉记录。
-
-用法示例：
-    # 初始化数据库
-    init_db('my_script.db')
-    # 查询用户
-    info = get_user_info('user1', db_path='my_script.db')
-    # 更新用户
-    update_user_info('user1', 'amount', 100.0, db_path='my_script.db')
-    # 添加投诉
-    add_complaint('user1', '服务态度不好', db_path='my_script.db')
-
-命令行初始化数据库：
-    python data_api.py my_script.db
+核心接口：
+- DataAPI(storage_dir=None): 构造函数，指定或自动定位数据存储根目录。
+- import_to_tree(tree, data, merge=True): 将外部数据导入到分析树的 data_buffer。
+- write_buffer_to_file(tree, filename=None, include_input=False): 将分析树缓冲区写入文件，返回文件路径。
+- read_file_to_buffer(tree, filename, merge=True): 从文件读取数据并写入分析树缓冲区。
+- list_files(tree=None): 列出指定脚本或所有脚本下的数据文件。
+- remove_file(tree, filename): 删除指定脚本目录下的数据文件。
 """
 
-import sqlite3
+from __future__ import annotations
+import json
+from typing import Any, Dict, Optional, List
+from pathlib import Path
 
-DB_PATH = 'csbot.db'
 
-class DatabaseAPI:
+class DataAPI:
     """
-    数据库接口类，根据脚本文件名自动选择数据库文件。
-    用法示例：
-        db = DatabaseAPI('myscript.txt')
-        db.init_db()
-        db.get_user_info('user1')
-        db.update_user_info('user1', 'amount', 100.0)
-        db.add_complaint('user1', '服务态度不好')
+    数据交互组件（每个脚本使用独立子目录）
+    构造方法必须传入脚本文件名（不带扩展名），自动定位 user.data/<脚本名> 目录。
+    若目录不存在则报错，存在则作为数据操作目录。
     """
-    def __init__(self, script_filename):
-        # 以脚本文件名为基础生成数据库文件名
-        import os
-        base = os.path.splitext(os.path.basename(script_filename))[0]
-        self.db_path = f"{base}.db"
 
-    def get_connection(self):
-        import sqlite3
-        return sqlite3.connect(self.db_path)
+    def __init__(self, script_name: str):
+        # 项目根下的 user.data/<script_name>
+        base = Path(__file__).resolve().parents[2] / "user.data"
+        target_dir = base / script_name
+        if not target_dir.exists() or not target_dir.is_dir():
+            raise FileNotFoundError(f"脚本数据目录不存在: {target_dir}")
+        self.storage_dir = target_dir
 
-    def init_db(self):
-        conn = self.get_connection()
-        cursor = conn.cursor()
-        cursor.execute('''
-            CREATE TABLE IF NOT EXISTS user (
-                user_id TEXT PRIMARY KEY,
-                name TEXT,
-                amount REAL
-            )
-        ''')
-        cursor.execute('''
-            CREATE TABLE IF NOT EXISTS complaint (
-                id INTEGER PRIMARY KEY AUTOINCREMENT,
-                user_id TEXT,
-                content TEXT
-            )
-        ''')
-        conn.commit()
-        conn.close()
+    def _get_script_dir(self, tree: Any = None) -> Path:
+        """返回当前脚本的数据目录（已在构造时确定）"""
+        return self.storage_dir
 
-    def get_user_info(self, user_id):
-        conn = self.get_connection()
-        cursor = conn.cursor()
-        cursor.execute('SELECT user_id, name, amount FROM user WHERE user_id=?', (user_id,))
-        row = cursor.fetchone()
-        conn.close()
-        if row:
-            return {'user_id': row[0], 'name': row[1], 'amount': row[2]}
-        return None
+    @staticmethod
+    def import_to_tree(tree: Any, data: Dict[str, Any], merge: bool = True) -> None:
+        """
+        将外部数据导入到分析树的 data_buffer 中
+        """
+        if not hasattr(tree, "data_buffer"):
+            raise AttributeError("传入对象不包含 data_buffer 属性，无法导入数据。")
+        if not isinstance(data, dict):
+            raise TypeError("data 必须为 dict。")
+        if merge:
+            tree.data_buffer.update(data)
+        else:
+            tree.data_buffer.clear()
+            tree.data_buffer.update(data)
 
-    def update_user_info(self, user_id, field, value):
-        conn = self.get_connection()
-        cursor = conn.cursor()
-        cursor.execute(f'UPDATE user SET {field}=? WHERE user_id=?', (value, user_id))
-        conn.commit()
-        updated = cursor.rowcount > 0
-        conn.close()
-        return updated
+    def write_buffer_to_file(self, tree: Any, filename: Optional[str] = None, include_input: bool = False) -> str:
+        """
+        只查找被修改的键，覆盖缓冲区中新的值，保持原结构和未变字段
+        """
+        if not hasattr(tree, "data_buffer"):
+            raise AttributeError("传入对象不包含 data_buffer 属性，无法写入文件。")
+        script_dir = self._get_script_dir(tree)
+        if not filename:
+            from datetime import datetime
+            filename = f"buffer_{datetime.utcnow().strftime('%Y%m%dT%H%M%SZ')}.json"
+        safe_name = Path(filename).name
+        target = script_dir / safe_name
 
-    def add_complaint(self, user_id, content):
-        conn = self.get_connection()
-        cursor = conn.cursor()
-        cursor.execute('INSERT INTO complaint (user_id, content) VALUES (?, ?)', (user_id, content))
-        conn.commit()
-        conn.close()
-        return True
+        # 读取原内容（如有），否则新建结构
+        if target.exists():
+            with target.open("r", encoding="utf-8") as f:
+                payload = json.load(f)
+        else:
+            payload = {}
 
-def get_connection(db_path='csbot.db'):
-    return sqlite3.connect(db_path)
+        # 只覆盖原有字段的值，不新增字段
+        old_data = payload.copy()
+        new_data = dict(tree.data_buffer or {})
+        for k in old_data:
+            if k in new_data and old_data[k] != new_data[k]:
+                payload[k] = new_data[k]
+        # 如果原文件不存在，则写入所有字段
+        if not old_data:
+            for k, v in new_data.items():
+                payload[k] = v
 
-def init_db(db_path='csbot.db'):
-    conn = get_connection(db_path)
-    cursor = conn.cursor()
-    cursor.execute('''
-        CREATE TABLE IF NOT EXISTS user (
-            user_id TEXT PRIMARY KEY,
-            name TEXT,
-            amount REAL
-        )
-    ''')
-    cursor.execute('''
-        CREATE TABLE IF NOT EXISTS complaint (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            user_id TEXT,
-            content TEXT
-        )
-    ''')
-    conn.commit()
-    conn.close()
+        with target.open("w", encoding="utf-8") as f:
+            json.dump(payload, f, ensure_ascii=False, indent=2)
+        return str(target.resolve())
 
-def get_user_info(user_id, db_path='csbot.db'):
-    conn = get_connection(db_path)
-    cursor = conn.cursor()
-    cursor.execute('SELECT user_id, name, amount FROM user WHERE user_id=?', (user_id,))
-    row = cursor.fetchone()
-    conn.close()
-    if row:
-        return {'user_id': row[0], 'name': row[1], 'amount': row[2]}
-    return None
+    def read_file_to_buffer(self, tree: Any, filename: str, merge: bool = True) -> None:
+        """
+        从组件维护的脚本专属文件读取数据并写入分析树缓冲区
+        """
+        if not hasattr(tree, "data_buffer"):
+            raise AttributeError("传入对象不包含 data_buffer 属性，无法读取文件。")
+        script_dir = self._get_script_dir(tree)
+        safe_name = Path(filename).name
+        target = script_dir / safe_name
+        if not target.exists():
+            raise FileNotFoundError(f"文件不存在：{target}")
+        with target.open("r", encoding="utf-8") as f:
+            payload = json.load(f)
 
-def update_user_info(user_id, field, value, db_path='csbot.db'):
-    conn = get_connection(db_path)
-    cursor = conn.cursor()
-    cursor.execute(f'UPDATE user SET {field}=? WHERE user_id=?', (value, user_id))
-    conn.commit()
-    updated = cursor.rowcount > 0
-    conn.close()
-    return updated
+        # 直接将文件内容合并到 data_buffer
+        if merge:
+            tree.data_buffer.update(payload)
+        else:
+            tree.data_buffer.clear()
+            tree.data_buffer.update(payload)
 
-def add_complaint(user_id, content, db_path='csbot.db'):
-    conn = get_connection(db_path)
-    cursor = conn.cursor()
-    cursor.execute('INSERT INTO complaint (user_id, content) VALUES (?, ?)', (user_id, content))
-    conn.commit()
-    conn.close()
-    return True
+    def list_files(self, tree: Any = None) -> List[str]:
+        """
+        列出指定脚本目录下的文件（仅文件名）。若 tree 为 None，则列出所有脚本目录下的文件（按脚本分组）。
+        """
+        if tree is None:
+            # 列出所有脚本下的文件（带目录前缀 script_name/filename）
+            out = []
+            for sub in sorted(self.storage_dir.iterdir()):
+                if sub.is_dir():
+                    for p in sorted(sub.iterdir()):
+                        if p.is_file():
+                            out.append(f"{sub.name}/{p.name}")
+            return out
+        script_dir = self._get_script_dir(tree)
+        return [p.name for p in sorted(script_dir.iterdir()) if p.is_file()]
 
-# 初始化数据库（首次运行时调用）
-if __name__ == '__main__':
-    import sys
-    db_path = sys.argv[1] if len(sys.argv) > 1 else 'csbot.db'
-    init_db(db_path)
+    def remove_file(self, tree: Any, filename: str) -> bool:
+        """删除指定脚本目录下的文件，返回是否成功"""
+        script_dir = self._get_script_dir(tree)
+        safe_name = Path(filename).name
+        target = script_dir / safe_name
+        if target.exists() and target.is_file():
+            target.unlink()
+            return True
+        return False
