@@ -61,105 +61,18 @@ class ASTree1:
     def get_node(self, name: str) -> Optional[ASTNode1]:
         return self.nodes.get(name)
 
-    def get_next_node(self, current_node_name: str, intention: str, context: Dict[str, Any] = None) -> Optional[ASTNode1]:
+    def get_next_node_name(self, current_node_name: str, intention: str, context: Dict[str, Any] = None) -> Optional[str]:
+        """
+        根据当前节点名称和意图获取下一个节点名称
+        :param current_node_name: 当前节点名称
+        :param intention: 用户意图
+        :param context: 当前变量上下文（用于条件判断）
+        :return: 下一个节点名称
+        """
         node = self.get_node(current_node_name)
         if not node:
             return None
-        next_name = node.get_next_node_name(intention, context)
-        return self.get_node(next_name) if next_name else None
-
-    def run(self, start_node: str, context: Dict[str, Any] = None, input_func=None, output_func=None):
-        """
-        从指定节点开始自动执行脚本流程
-        :param start_node: 起始节点名称
-        :param context: 变量上下文（如用户数据），会同步到数据缓冲区
-        :param input_func: 获取用户输入的函数（可自定义，默认input）
-        :param output_func: 输出函数（可自定义，默认print）
-        """
-        if input_func is None:
-            input_func = input
-        if output_func is None:
-            output_func = print
-
-        # 初始化数据缓冲区
-        if context:
-            self.data_buffer.update(context)
-        self.input_buffer.clear()
-
-        print(f"[DEBUG] 数据缓冲区内容: {self.data_buffer}")  # 添加调试信息
-
-        current = self.get_node(start_node)
-        while current:
-            actions = current.actions
-            # Speak
-            if 'speak' in actions:
-                text = actions['speak']
-                # 修正变量替换逻辑，确保替换所有 $变量名
-                for k, v in self.data_buffer.items():
-                    text = text.replace(f"${{{k}}}", str(v))  # 替换 ${变量名} 为实际值
-                output_func(text)  # 输出替换后的文本
-            # Listen
-            user_input = None
-            if 'listen' in actions:
-                user_input = input_func(">> ")
-                self.input_buffer['listen_content'] = user_input
-            # 数据更新动作（UPGRATE）
-            if 'upgrate' in actions:
-                for upd in actions['upgrate']:
-                    val = upd['value']
-                    # 修正：支持 $listen_content 变量正确赋值
-                    if isinstance(val, str) and val.startswith("$"):
-                        var_name = val[1:]
-                        if var_name == "listen_content":
-                            val = self.input_buffer.get("listen_content", "")
-                        else:
-                            val = self.data_buffer.get(var_name, val)
-                    self.data_buffer[upd['field']] = val
-            # Middle 动作处理
-            if actions.get('middle', False):
-                # 跳转到middleProc节点
-                middle_node = self.get_node('middleProc')
-                if middle_node:
-                    current = middle_node
-                    continue
-                else:
-                    raise RuntimeError("未找到 middleProc 节点，无法执行 Middle 动作")
-            # Exit 动作处理
-            if actions.get('exit', False):
-                # 跳转到exit节点并退出
-                exit_node = self.get_node('exit')
-                if exit_node:
-                    actions = exit_node.actions
-                    if 'speak' in actions:
-                        output_func(actions['speak'])
-                break
-            # 条件分支
-            next_node_name = None
-            if current.ifs and self.data_buffer:
-                for cond in current.ifs:
-                    expr = cond['condition']
-                    expr_eval = expr
-                    for k, v in self.data_buffer.items():
-                        expr_eval = expr_eval.replace(f"${k}", repr(v))
-                    try:
-                        if eval(expr_eval):
-                            next_node_name = cond['goto']
-                            break
-                    except Exception:
-                        continue
-            # 普通分支
-            if not next_node_name:
-                if user_input and user_input in current.branch:
-                    next_node_name = current.branch[user_input]
-                elif '意图识别失败' in current.branch:
-                    next_node_name = current.branch['意图识别失败']
-                elif '结束' in current.branch:
-                    next_node_name = current.branch['结束']
-                else:
-                    next_node_name = None
-            if not next_node_name:
-                break
-            current = self.get_node(next_node_name)
+        return node.get_next_node_name(intention, context)
 
 def from_json_script(json_path: str) -> ASTree1:
     """

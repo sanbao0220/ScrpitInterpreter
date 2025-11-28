@@ -59,6 +59,7 @@ Step complainProc
     Speak "很抱歉给您带来不便，请描述您的投诉内容，我们会尽快处理。如需退货或换货也可直接说明。"
     Listen 5, 50
     UPGRATE $compain $listen_content
+    Speak "感谢您的反馈，您的投诉内容我们会尽快受理"
     Middle
 
 Step humanProc

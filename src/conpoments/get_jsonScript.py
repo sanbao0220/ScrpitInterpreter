@@ -44,7 +44,7 @@ def parse_text_script(text_script: str, metadata=None):
     """
     steps = {}
     current_step = None
-    actions = {}
+    actions = []
     branch = {}
     ifs = []
 
@@ -59,7 +59,7 @@ def parse_text_script(text_script: str, metadata=None):
             if ifs:
                 step_dict["if"] = ifs.copy()
             steps[current_step] = step_dict
-        actions = {}
+        actions = []
         branch = {}
         ifs = []
 
@@ -77,20 +77,18 @@ def parse_text_script(text_script: str, metadata=None):
         if m:
             speak_expr = m.group(1).strip()
             if '+' in speak_expr or '$' in speak_expr:
-                actions["speak"] = _expr_to_template(speak_expr)
+                speak_content = _expr_to_template(speak_expr)
             else:
-                actions["speak"] = speak_expr.strip('"')
+                speak_content = speak_expr.strip('"')
+            actions.append({"type": "speak", "content": speak_content})
             continue
         m = re.match(r"Listen\s+([\d]+)\s*,\s*([\d]+)", line)
         if m:
-            actions["listen"] = f"{m.group(1)},{m.group(2)}"
+            actions.append({"type": "listen", "min": int(m.group(1)), "max": int(m.group(2))})
             continue
         m = re.match(r"UPGRATE\s+\$([a-zA-Z_][\w]*)\s+\"?([^\"]*)\"?", line)
         if m:
-            # 数据更新动作，支持多个
-            if "upgrate" not in actions:
-                actions["upgrate"] = []
-            actions["upgrate"].append({"field": m.group(1), "value": m.group(2)})
+            actions.append({"type": "upgrate", "field": m.group(1), "value": m.group(2)})
             continue
         m = re.match(r"If\s+(.+?)\s+Then\s+(\w+)", line)
         if m:
@@ -112,11 +110,11 @@ def parse_text_script(text_script: str, metadata=None):
             continue
         # 将Exit作为动作
         if re.match(r"Exit", line):
-            actions["exit"] = True
+            actions.append({"type": "exit"})
             continue
         # 将Middle作为动作
         if re.match(r"Middle", line):
-            actions["middle"] = True
+            actions.append({"type": "middle"})
             continue
 
     flush_step()

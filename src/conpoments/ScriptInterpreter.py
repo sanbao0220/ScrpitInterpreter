@@ -22,7 +22,7 @@ from pathlib import Path
 from get_jsonScript import text_script_to_json_file
 from Ast1 import ASTree1, from_json_script
 from data_api import DataAPI
-from modelAPI import client  # 引入大模型调用的客户端
+from modelAPI import client, extract_branches, recognize_intent  # 引入大模型调用的客户端和辅助函数
 
 class ScriptInterpreter:
     def __init__(self, script_path: Path):
@@ -34,6 +34,10 @@ class ScriptInterpreter:
             raise RuntimeError("仅支持 .txt 脚本文件")
         self.api = DataAPI(self.tree.script_name)
         self.llm_client = client  # 初始化大模型客户端
+
+        # 初始化可能的意图列表
+        self.possible_intents = extract_branches(script_path)
+        print(f"[INFO] 提取的可能意图: {self.possible_intents}")
 
     def load_user_data(self, user_file: str):
         # 从 user.data/<script_name>/<user_file> 加载用户数据到缓冲区
@@ -49,33 +53,98 @@ class ScriptInterpreter:
         :param user_input: 用户的自然语言输入
         :return: 识别出的意图（如 "投诉", "账单", "意图识别失败" 等）
         """
-        messages = [{"role": "user", "content": user_input}]
         try:
-            response = self.llm_client.chat.completions.create(
-                model="deepseek-v3.2-exp",
-                messages=messages,
-                extra_body={"enable_thinking": True},
-                stream=False
-            )
-            # 假设返回的内容中包含意图字段
-            intent = response.choices[0].message.get("content", "意图识别失败").strip()
+            intent = recognize_intent(user_input, self.possible_intents)
             return intent
         except Exception as e:
             print(f"[ERROR] 意图识别失败: {e}")
             return "意图识别失败"
 
     def run(self):
-        # 执行脚本流程
+        """
+        执行脚本流程
+        """
         print(f"【脚本：{self.tree.script_name}】智能客服对话开始")
         current_step = "welcome"
         while current_step:
-            user_input = self.tree.run(current_step, self.tree.data_buffer)
-            if user_input:  # 如果有用户输入，调用意图识别
-                intent = self.recognize_intent(user_input)
-                print(f"[INFO] 用户意图识别结果: {intent}")
-                current_step = self.tree.get_next_step(current_step, intent)
-            else:
-                current_step = None
+            # 获取下一个节点
+            next_step = None
+            print(f"[DEBUG] 当前步骤: {current_step}")
+            current_node = self.tree.get_node(current_step)
+            if not current_node:
+                print(f"[ERROR] 未找到步骤: {current_step}")
+                break
+
+            # 遍历动作列表，按顺序执行
+            for action in current_node.actions:
+                action_type = action.get("type")
+                if action_type == "speak":
+                    # 执行 Speak 动作
+                    text = action.get("content", "")
+                    for k, v in self.tree.data_buffer.items():
+                        text = text.replace(f"${{{k}}}", str(v))
+                    print(text)
+
+                elif action_type == "listen":
+                    # 执行 Listen 动作
+                    min_time = action.get("min", 0)
+                    max_time = action.get("max", 0)
+                    print(f"[INFO] 监听用户输入，最短时间: {min_time}s, 最长时间: {max_time}s")
+                    user_input = input(">> ")
+                    self.tree.input_buffer['listen_content'] = user_input
+
+                    # 调用大模型进行意图识别
+                    intent = self.recognize_intent(user_input)
+                    print(f"[INFO] 用户意图识别结果: {intent}")
+                    self.tree.input_buffer['intent'] = intent
+
+                elif action_type == "upgrate":
+                    # 执行数据更新动作（UPGRATE）
+                    field = action.get("field")
+                    value = action.get("value")
+                    if isinstance(value, str) and value.startswith("$"):
+                        var_name = value[1:]
+                        if var_name == "listen_content":
+                            value = self.tree.input_buffer.get("listen_content", "")
+                        else:
+                            value = self.tree.data_buffer.get(var_name, value)
+                    if self.tree.data_buffer.get(field) != value:
+                        self.tree.data_buffer[field] = value
+                        print(f"[INFO] 数据更新: {field} -> {value}")
+                        # 立即写回文件
+                        self.api.write_buffer_to_file(self.tree, filename=self.current_user_file)
+
+                elif action_type == "middle":
+                    # 处理 Middle 动作
+                    print(f"[DEBUG] Middle 动作触发，跳转到 middleProc")
+                    next_step = "middleProc"
+                    break
+
+                elif action_type == "exit":
+                    # 处理 Exit 动作
+                    print("对话结束")
+                    return
+
+
+            
+            intent = self.tree.input_buffer.get("intent")
+            # 优先使用 branch 分支进行跳转
+            if next_step == None:
+                if intent and intent in current_node.branch:
+                    next_step = current_node.branch[intent]
+                    print(f"[DEBUG] 根据分支意图跳转到: {next_step}")
+                elif intent:
+                    next_step = self.tree.get_next_node_name(current_step, intent, self.tree.data_buffer)
+                    print(f"[DEBUG] 根据条件分支跳转到: {next_step}")
+                if not next_step and "意图识别失败" in current_node.branch:
+                    print(f"[DEBUG] 意图识别失败，跳转到 fail")
+                    next_step = current_node.branch["意图识别失败"]
+                if not next_step:
+                    print(f"[WARN] 无法确定下一步，结束对话")
+                    break
+
+            current_step = next_step
+
         # 执行完自动保存数据到当前用户文件
         self.save_user_data(self.current_user_file)
 
